@@ -1,19 +1,11 @@
-const ENDPOINTS = [
-  'https://api.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
-  'https://api1.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
-  'https://api2.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
-  'https://api3.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
-];
-
+// Bybit: [startTime, open, high, low, close, volume, turnover], newest first
 async function fetchKlines() {
-  for (const url of ENDPOINTS) {
-    try {
-      const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      const raw = await resp.json();
-      if (Array.isArray(raw) && raw.length > 0) return raw;
-    } catch (_) {}
-  }
-  throw new Error('所有币安节点均无法访问（可能被地区限制）');
+  const resp = await fetch(
+    'https://api.bybit.com/v5/market/kline?category=spot&symbol=ETHUSDT&interval=1&limit=60'
+  );
+  const data = await resp.json();
+  if (data.retCode !== 0) throw new Error(data.retMsg);
+  return data.result.list.slice().reverse(); // 改为旧→新
 }
 
 export default async function handler(req, res) {

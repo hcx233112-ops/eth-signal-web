@@ -60,10 +60,14 @@ function getComposite(closes) {
   return { signal: score >= 2 ? 'UP' : score <= -2 ? 'DOWN' : 'WAIT', score, rsi };
 }
 
-async function bark(signal, score, rsi) {
-  const key   = process.env.BARK_KEY;
-  const title = signal === 'UP' ? '买涨信号 ↑' : '买跌信号 ↓';
-  const body  = `综合得分 ${score > 0 ? '+' : ''}${score} | RSI ${rsi.toFixed(1)}`;
+function getRSISignal(rsi, lo, hi) {
+  if (rsi < lo) return 'UP';
+  if (rsi > hi) return 'DOWN';
+  return 'WAIT';
+}
+
+async function bark(title, body) {
+  const key = process.env.BARK_KEY;
   await fetch(`https://api.day.app/${key}/${encodeURIComponent(title)}/${encodeURIComponent(body)}?sound=minuet&level=active`);
 }
 
@@ -74,19 +78,47 @@ export default async function handler(req, res) {
   }
 
   try {
-    const raw      = await fetchKlines();
+    const raw       = await fetchKlines();
     const allCloses = raw.map(k => parseFloat(k[4]));
-
-    const now  = getComposite(allCloses);
-    const prev = getComposite(allCloses.slice(0, -1));
+    const rsiNow    = calcRSI(allCloses);
+    const rsiPrev   = calcRSI(allCloses.slice(0, -1));
 
     const pushed = [];
-    if (prev.signal === 'WAIT' && now.signal !== 'WAIT') {
-      await bark(now.signal, now.score, now.rsi);
-      pushed.push(now.signal);
+
+    // RSI 25/75 — 高精度
+    const s1Now  = getRSISignal(rsiNow,  25, 75);
+    const s1Prev = getRSISignal(rsiPrev, 25, 75);
+    if (s1Prev === 'WAIT' && s1Now !== 'WAIT') {
+      await bark(
+        s1Now === 'UP' ? '买涨 ↑ RSI25/75' : '买跌 ↓ RSI25/75',
+        `RSI ${rsiNow.toFixed(1)} | 胜率 56.4%`
+      );
+      pushed.push(`s1:${s1Now}`);
     }
 
-    res.json({ now: now.signal, prev: prev.signal, score: now.score, pushed });
+    // RSI 30/70 — 高频率
+    const s2Now  = getRSISignal(rsiNow,  30, 70);
+    const s2Prev = getRSISignal(rsiPrev, 30, 70);
+    if (s2Prev === 'WAIT' && s2Now !== 'WAIT') {
+      await bark(
+        s2Now === 'UP' ? '买涨 ↑ RSI30/70' : '买跌 ↓ RSI30/70',
+        `RSI ${rsiNow.toFixed(1)} | 胜率 56.0%`
+      );
+      pushed.push(`s2:${s2Now}`);
+    }
+
+    // 综合信号 (RSI + MACD + EMA + 布林带)
+    const compNow  = getComposite(allCloses);
+    const compPrev = getComposite(allCloses.slice(0, -1));
+    if (compPrev.signal === 'WAIT' && compNow.signal !== 'WAIT') {
+      await bark(
+        compNow.signal === 'UP' ? '买涨 ↑ 综合信号' : '买跌 ↓ 综合信号',
+        `得分 ${compNow.score > 0 ? '+' : ''}${compNow.score} | RSI ${rsiNow.toFixed(1)}`
+      );
+      pushed.push(`comp:${compNow.signal}`);
+    }
+
+    res.json({ rsiNow: +rsiNow.toFixed(1), rsiPrev: +rsiPrev.toFixed(1), pushed });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

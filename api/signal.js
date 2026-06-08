@@ -1,11 +1,12 @@
-// Bybit: [startTime, open, high, low, close, volume, turnover], newest first
+// Kraken: [time, open, high, low, close, vwap, volume, count]
 async function fetchKlines() {
   const resp = await fetch(
-    'https://api.bybit.com/v5/market/kline?category=spot&symbol=ETHUSDT&interval=1&limit=60'
+    'https://api.kraken.com/0/public/OHLC?pair=ETHUSD&interval=1&count=60'
   );
   const data = await resp.json();
-  if (data.retCode !== 0) throw new Error(data.retMsg);
-  return data.result.list.slice().reverse(); // 改为旧→新
+  if (data.error && data.error.length) throw new Error(data.error[0]);
+  const bars = data.result['XETHZUSD'];
+  return bars; // 已是旧→新顺序
 }
 
 export default async function handler(req, res) {

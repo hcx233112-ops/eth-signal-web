@@ -1,10 +1,25 @@
+const ENDPOINTS = [
+  'https://api.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
+  'https://api1.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
+  'https://api2.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
+  'https://api3.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60',
+];
+
+async function fetchKlines() {
+  for (const url of ENDPOINTS) {
+    try {
+      const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const raw = await resp.json();
+      if (Array.isArray(raw) && raw.length > 0) return raw;
+    } catch (_) {}
+  }
+  throw new Error('所有币安节点均无法访问（可能被地区限制）');
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   try {
-    const resp = await fetch(
-      'https://api.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1m&limit=60'
-    );
-    const raw = await resp.json();
+    const raw = await fetchKlines();
     const closes = raw.map(k => parseFloat(k[4]));
     const price  = closes[closes.length - 1];
     const rsiVal = calcRSI(closes, 14);

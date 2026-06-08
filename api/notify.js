@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   if (!key) return res.status(500).json({ error: 'no bark key' });
 
   const title = signal === 'UP' ? '脚本已完成1' : '脚本已完成2';
-  const body  = `RSI ${rsi} | $${price} | ${level}`;
+  const body  = `RSI ${rsi} | ${level}`;
   const url   = `https://api.day.app/${key}/${encodeURIComponent(title)}/${encodeURIComponent(body)}?sound=minuet&level=active`;
 
   try {

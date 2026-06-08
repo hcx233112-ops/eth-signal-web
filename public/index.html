@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETH 事件合约信号</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0d0d;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .title { font-size: 16px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
+  .signal-box {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 60px rgba(0,0,0,0.5);
+  }
+  .signal-box.UP   { background: radial-gradient(circle, #0f5c2e, #0a3d1f); border: 3px solid #00e676; box-shadow: 0 0 40px rgba(0,230,118,0.3); }
+  .signal-box.DOWN { background: radial-gradient(circle, #5c0f0f, #3d0a0a); border: 3px solid #ff1744; box-shadow: 0 0 40px rgba(255,23,68,0.3); }
+  .signal-box.WAIT { background: radial-gradient(circle, #1a1a2e, #0d0d1a); border: 3px solid #444; box-shadow: none; }
+  .signal-box.loading { background: #111; border: 3px solid #333; }
+  .signal-label { font-size: 48px; font-weight: 700; letter-spacing: 1px; }
+  .signal-box.UP   .signal-label { color: #00e676; }
+  .signal-box.DOWN .signal-label { color: #ff1744; }
+  .signal-box.WAIT .signal-label { color: #888; }
+  .signal-box.loading .signal-label { color: #444; }
+  .signal-sub { font-size: 14px; margin-top: 8px; opacity: 0.6; }
+
+  .stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-val { font-size: 24px; font-weight: 600; color: #eee; }
+  .stat-lbl { font-size: 12px; color: #555; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .rsi-bar-wrap { width: 280px; margin-bottom: 32px; }
+  .rsi-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 6px; }
+  .rsi-bar-bg { height: 6px; background: #222; border-radius: 3px; position: relative; }
+  .rsi-bar-bg::before { content: ''; position: absolute; left: 25%; width: 1px; height: 100%; background: #00e676; opacity: 0.5; }
+  .rsi-bar-bg::after  { content: ''; position: absolute; left: 75%; width: 1px; height: 100%; background: #ff1744; opacity: 0.5; }
+  .rsi-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; position: absolute; top: -3px; transform: translateX(-50%); transition: left 0.4s ease; }
+
+  .refresh-row { display: flex; align-items: center; gap: 8px; color: #444; font-size: 13px; }
+  .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #00e676; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .update-time { font-size: 12px; color: #444; margin-top: 8px; }
+  .error { color: #ff5555; font-size: 14px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="title">ETH · 事件合约信号</div>
+
+<div class="signal-box loading" id="box">
+  <div class="signal-label" id="label">--</div>
+  <div class="signal-sub" id="sub">加载中...</div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-val" id="price">--</div>
+    <div class="stat-lbl">ETH 价格</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="rsi">--</div>
+    <div class="stat-lbl">RSI(14)</div>
+  </div>
+</div>
+
+<div class="rsi-bar-wrap">
+  <div class="rsi-labels"><span>超卖 &lt;25</span><span>RSI</span><span>超买 &gt;75</span></div>
+  <div class="rsi-bar-bg" id="bar">
+    <div class="rsi-dot" id="dot" style="left:50%"></div>
+  </div>
+</div>
+
+<div class="refresh-row">
+  <div class="dot-live"></div>
+  <span id="countdown">每分钟自动刷新</span>
+</div>
+<div class="update-time" id="uptime"></div>
+<div class="error" id="err"></div>
+
+<script>
+let timer = 60, iv;
+
+async function load() {
+  try {
+    document.getElementById('err').textContent = '';
+    const r = await fetch('/api/signal');
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+
+    const box = document.getElementById('box');
+    box.className = 'signal-box ' + d.signal;
+    document.getElementById('label').textContent = d.label;
+    document.getElementById('sub').textContent =
+      d.signal === 'UP'   ? '预测10分钟后价格上涨' :
+      d.signal === 'DOWN' ? '预测10分钟后价格下跌' : '无明确信号，不操作';
+    document.getElementById('price').textContent = '$' + d.price.toLocaleString();
+    document.getElementById('rsi').textContent = d.rsi;
+    document.getElementById('dot').style.left = d.rsi + '%';
+    document.getElementById('uptime').textContent =
+      '更新于 ' + new Date(d.time).toLocaleTimeString('zh-CN');
+
+    timer = 60;
+  } catch(e) {
+    document.getElementById('err').textContent = '获取失败: ' + e.message;
+  }
+}
+
+function tick() {
+  timer--;
+  if (timer <= 0) { load(); timer = 60; }
+  document.getElementById('countdown').textContent = `${timer} 秒后刷新`;
+}
+
+load();
+iv = setInterval(tick, 1000);
+</script>
+</body>
+</html>

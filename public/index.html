@@ -7,73 +7,72 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #0d0d0d;
-    color: #fff;
+    background: #0d0d0d; color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 24px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 24px;
   }
-  .title { font-size: 16px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
+  .title { font-size: 14px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
+  .signals { display: flex; gap: 20px; margin-bottom: 32px; flex-wrap: wrap; justify-content: center; }
+  .card { display: flex; flex-direction: column; align-items: center; }
+  .card-tag { font-size: 11px; color: #555; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
   .signal-box {
-    width: 280px;
-    height: 280px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     transition: all 0.4s ease;
-    box-shadow: 0 0 60px rgba(0,0,0,0.5);
   }
-  .signal-box.UP   { background: radial-gradient(circle, #0f5c2e, #0a3d1f); border: 3px solid #00e676; box-shadow: 0 0 40px rgba(0,230,118,0.3); }
-  .signal-box.DOWN { background: radial-gradient(circle, #5c0f0f, #3d0a0a); border: 3px solid #ff1744; box-shadow: 0 0 40px rgba(255,23,68,0.3); }
-  .signal-box.WAIT { background: radial-gradient(circle, #1a1a2e, #0d0d1a); border: 3px solid #444; box-shadow: none; }
-  .signal-box.loading { background: #111; border: 3px solid #333; }
-  .signal-label { font-size: 48px; font-weight: 700; letter-spacing: 1px; }
+  .signal-box.UP   { background: radial-gradient(circle, #0f5c2e, #0a3d1f); border: 3px solid #00e676; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
+  .signal-box.DOWN { background: radial-gradient(circle, #5c0f0f, #3d0a0a); border: 3px solid #ff1744; box-shadow: 0 0 30px rgba(255,23,68,0.3); }
+  .signal-box.WAIT { background: #111; border: 3px solid #2a2a2a; }
+  .signal-box.loading { background: #111; border: 3px solid #222; }
+  .signal-label { font-size: 32px; font-weight: 700; }
   .signal-box.UP   .signal-label { color: #00e676; }
   .signal-box.DOWN .signal-label { color: #ff1744; }
-  .signal-box.WAIT .signal-label { color: #888; }
-  .signal-box.loading .signal-label { color: #444; }
-  .signal-sub { font-size: 14px; margin-top: 8px; opacity: 0.6; }
-
-  .stats {
-    display: flex;
-    gap: 32px;
-    margin-bottom: 32px;
-  }
+  .signal-box.WAIT .signal-label, .signal-box.loading .signal-label { color: #444; }
+  .signal-sub { font-size: 11px; margin-top: 6px; opacity: 0.5; text-align: center; padding: 0 12px; }
+  .winrate { font-size: 12px; margin-top: 8px; color: #555; }
+  .stats { display: flex; gap: 32px; margin-bottom: 28px; }
   .stat { text-align: center; }
-  .stat-val { font-size: 24px; font-weight: 600; color: #eee; }
-  .stat-lbl { font-size: 12px; color: #555; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
-
-  .rsi-bar-wrap { width: 280px; margin-bottom: 32px; }
-  .rsi-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 6px; }
-  .rsi-bar-bg { height: 6px; background: #222; border-radius: 3px; position: relative; }
-  .rsi-bar-bg::before { content: ''; position: absolute; left: 25%; width: 1px; height: 100%; background: #00e676; opacity: 0.5; }
-  .rsi-bar-bg::after  { content: ''; position: absolute; left: 75%; width: 1px; height: 100%; background: #ff1744; opacity: 0.5; }
+  .stat-val { font-size: 22px; font-weight: 600; color: #eee; }
+  .stat-lbl { font-size: 11px; color: #555; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .rsi-bar-wrap { width: 280px; margin-bottom: 28px; }
+  .rsi-labels { display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-bottom: 6px; }
+  .rsi-bar-bg { height: 6px; background: #1a1a1a; border-radius: 3px; position: relative; }
+  .rsi-zone-lo { position: absolute; left: 0; width: 25%; height: 100%; background: rgba(0,230,118,0.15); border-radius: 3px 0 0 3px; }
+  .rsi-zone-hi { position: absolute; right: 0; width: 25%; height: 100%; background: rgba(255,23,68,0.15); border-radius: 0 3px 3px 0; }
+  .rsi-line-30 { position: absolute; left: 30%; width: 1px; height: 100%; background: #333; }
+  .rsi-line-70 { position: absolute; left: 70%; width: 1px; height: 100%; background: #333; }
   .rsi-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; position: absolute; top: -3px; transform: translateX(-50%); transition: left 0.4s ease; }
-
   .refresh-row { display: flex; align-items: center; gap: 8px; color: #444; font-size: 13px; }
-  .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #00e676; animation: pulse 1.5s infinite; }
+  .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #00e676; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  @keyframes flash { 0%,100%{transform:scale(1)} 20%{transform:scale(1.08)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} }
+  @keyframes flash { 0%,100%{transform:scale(1)} 20%{transform:scale(1.07)} 50%{transform:scale(1)} 70%{transform:scale(1.04)} }
   .signal-box.flash { animation: flash 0.6s ease; }
-
-  .update-time { font-size: 12px; color: #444; margin-top: 8px; }
-  .error { color: #ff5555; font-size: 14px; text-align: center; }
+  .update-time { font-size: 11px; color: #3a3a3a; margin-top: 6px; }
+  .error { color: #ff5555; font-size: 13px; text-align: center; margin-top: 8px; }
 </style>
 </head>
 <body>
 
 <div class="title">ETH · 事件合约信号</div>
 
-<div class="signal-box loading" id="box">
-  <div class="signal-label" id="label">--</div>
-  <div class="signal-sub" id="sub">加载中...</div>
+<div class="signals">
+  <div class="card">
+    <div class="card-tag">RSI 25/75 · 高精度</div>
+    <div class="signal-box loading" id="box1">
+      <div class="signal-label" id="label1">--</div>
+      <div class="signal-sub" id="sub1">加载中...</div>
+    </div>
+    <div class="winrate">胜率 56.4% · ~40次/天</div>
+  </div>
+  <div class="card">
+    <div class="card-tag">RSI 30/70 · 高频率</div>
+    <div class="signal-box loading" id="box2">
+      <div class="signal-label" id="label2">--</div>
+      <div class="signal-sub" id="sub2">加载中...</div>
+    </div>
+    <div class="winrate">胜率 56.0% · ~115次/天</div>
+  </div>
 </div>
 
 <div class="stats">
@@ -88,22 +87,45 @@
 </div>
 
 <div class="rsi-bar-wrap">
-  <div class="rsi-labels"><span>超卖 &lt;25</span><span>RSI</span><span>超买 &gt;75</span></div>
-  <div class="rsi-bar-bg" id="bar">
+  <div class="rsi-labels">
+    <span style="color:#00e676">◀ &lt;25</span>
+    <span>30 ── 70</span>
+    <span style="color:#ff1744">&gt;75 ▶</span>
+  </div>
+  <div class="rsi-bar-bg">
+    <div class="rsi-zone-lo"></div>
+    <div class="rsi-zone-hi"></div>
+    <div class="rsi-line-30"></div>
+    <div class="rsi-line-70"></div>
     <div class="rsi-dot" id="dot" style="left:50%"></div>
   </div>
 </div>
 
 <div class="refresh-row">
   <div class="dot-live"></div>
-  <span id="countdown">每分钟自动刷新</span>
+  <span id="countdown">加载中...</span>
 </div>
 <div class="update-time" id="uptime"></div>
 <div class="error" id="err"></div>
 
 <script>
 const INTERVAL = 15;
-let timer = INTERVAL, lastSignal = null;
+let timer = INTERVAL, last1 = null, last2 = null;
+
+function applySignal(boxId, labelId, subId, s, last) {
+  const box = document.getElementById(boxId);
+  if (last !== null && last !== s.signal && s.signal !== 'WAIT') {
+    box.classList.remove('flash');
+    void box.offsetWidth;
+    box.classList.add('flash');
+    setTimeout(() => box.classList.remove('flash'), 700);
+  }
+  box.className = 'signal-box ' + s.signal;
+  document.getElementById(labelId).textContent = s.label;
+  document.getElementById(subId).textContent =
+    s.signal === 'UP'   ? '预测10分钟后上涨' :
+    s.signal === 'DOWN' ? '预测10分钟后下跌' : '暂无信号';
+}
 
 async function load() {
   try {
@@ -112,27 +134,15 @@ async function load() {
     const d = await r.json();
     if (d.error) throw new Error(d.error);
 
-    const box = document.getElementById('box');
-    // 信号变化时闪烁
-    if (lastSignal !== null && lastSignal !== d.signal && d.signal !== 'WAIT') {
-      box.classList.remove('flash');
-      void box.offsetWidth; // reflow
-      box.classList.add('flash');
-      setTimeout(() => box.classList.remove('flash'), 700);
-    }
-    lastSignal = d.signal;
+    applySignal('box1', 'label1', 'sub1', d.s1, last1);
+    last1 = d.s1.signal;
+    applySignal('box2', 'label2', 'sub2', d.s2, last2);
+    last2 = d.s2.signal;
 
-    box.className = 'signal-box ' + d.signal;
-    document.getElementById('label').textContent = d.label;
-    document.getElementById('sub').textContent =
-      d.signal === 'UP'   ? '预测10分钟后价格上涨' :
-      d.signal === 'DOWN' ? '预测10分钟后价格下跌' : '无明确信号，不操作';
     document.getElementById('price').textContent = '$' + d.price.toLocaleString();
     document.getElementById('rsi').textContent = d.rsi;
     document.getElementById('dot').style.left = d.rsi + '%';
-    document.getElementById('uptime').textContent =
-      '更新于 ' + new Date(d.time).toLocaleTimeString('zh-CN');
-
+    document.getElementById('uptime').textContent = '更新于 ' + new Date(d.time).toLocaleTimeString('zh-CN');
     timer = INTERVAL;
   } catch(e) {
     document.getElementById('err').textContent = '获取失败: ' + e.message;

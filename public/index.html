@@ -13,13 +13,11 @@
     justify-content: center; min-height: 100vh; padding: 24px;
   }
   .title { font-size: 14px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
-  .signals { display: flex; gap: 20px; margin-bottom: 32px; flex-wrap: wrap; justify-content: center; }
-  .card { display: flex; flex-direction: column; align-items: center; }
-  .card-tag { font-size: 11px; color: #555; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+
   .signal-box {
     width: 200px; height: 200px; border-radius: 50%;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: all 0.4s ease;
+    transition: all 0.4s ease; margin-bottom: 8px;
   }
   .signal-box.UP   { background: radial-gradient(circle, #0f5c2e, #0a3d1f); border: 3px solid #00e676; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
   .signal-box.DOWN { background: radial-gradient(circle, #5c0f0f, #3d0a0a); border: 3px solid #ff1744; box-shadow: 0 0 30px rgba(255,23,68,0.3); }
@@ -28,26 +26,45 @@
   .signal-label { font-size: 32px; font-weight: 700; }
   .signal-box.UP   .signal-label { color: #00e676; }
   .signal-box.DOWN .signal-label { color: #ff1744; }
-  .signal-box.WAIT .signal-label, .signal-box.loading .signal-label { color: #444; }
-  .signal-sub { font-size: 11px; margin-top: 6px; opacity: 0.5; text-align: center; padding: 0 12px; }
-  .winrate { font-size: 12px; margin-top: 8px; color: #555; }
+  .signal-box.WAIT .signal-label,
+  .signal-box.loading .signal-label { color: #444; }
+  .signal-score { font-size: 12px; margin-top: 6px; opacity: 0.5; }
+  @keyframes flash { 0%,100%{transform:scale(1)} 20%{transform:scale(1.07)} 50%{transform:scale(1)} 70%{transform:scale(1.04)} }
+  .signal-box.flash { animation: flash 0.6s ease; }
+
+  .score-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+  .score-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    transition: background 0.3s;
+  }
+
+  .indicators { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; width: 260px; }
+  .chip { background: #111; border-radius: 10px; padding: 10px 14px; }
+  .chip.up   { border: 1px solid #1a4a2a; }
+  .chip.down { border: 1px solid #4a1a1a; }
+  .chip.wait { border: 1px solid #1e1e1e; }
+  .chip-name   { font-size: 10px; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .chip-val    { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .chip.up   .chip-val { color: #00e676; }
+  .chip.down .chip-val { color: #ff1744; }
+  .chip.wait .chip-val { color: #444; }
+  .chip-detail { font-size: 10px; color: #333; }
+
   .stats { display: flex; gap: 32px; margin-bottom: 28px; }
   .stat { text-align: center; }
   .stat-val { font-size: 22px; font-weight: 600; color: #eee; }
   .stat-lbl { font-size: 11px; color: #555; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
   .rsi-bar-wrap { width: 280px; margin-bottom: 28px; }
   .rsi-labels { display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-bottom: 6px; }
   .rsi-bar-bg { height: 6px; background: #1a1a1a; border-radius: 3px; position: relative; }
-  .rsi-zone-lo { position: absolute; left: 0; width: 25%; height: 100%; background: rgba(0,230,118,0.15); border-radius: 3px 0 0 3px; }
-  .rsi-zone-hi { position: absolute; right: 0; width: 25%; height: 100%; background: rgba(255,23,68,0.15); border-radius: 0 3px 3px 0; }
-  .rsi-line-30 { position: absolute; left: 30%; width: 1px; height: 100%; background: #333; }
-  .rsi-line-70 { position: absolute; left: 70%; width: 1px; height: 100%; background: #333; }
+  .rsi-zone-lo { position: absolute; left: 0; width: 30%; height: 100%; background: rgba(0,230,118,0.15); border-radius: 3px 0 0 3px; }
+  .rsi-zone-hi { position: absolute; right: 0; width: 30%; height: 100%; background: rgba(255,23,68,0.15); border-radius: 0 3px 3px 0; }
   .rsi-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; position: absolute; top: -3px; transform: translateX(-50%); transition: left 0.4s ease; }
+
   .refresh-row { display: flex; align-items: center; gap: 8px; color: #444; font-size: 13px; }
   .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #00e676; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  @keyframes flash { 0%,100%{transform:scale(1)} 20%{transform:scale(1.07)} 50%{transform:scale(1)} 70%{transform:scale(1.04)} }
-  .signal-box.flash { animation: flash 0.6s ease; }
   .update-time { font-size: 11px; color: #3a3a3a; margin-top: 6px; }
   .error { color: #ff5555; font-size: 13px; text-align: center; margin-top: 8px; }
 </style>
@@ -56,22 +73,33 @@
 
 <div class="title">ETH · 事件合约信号</div>
 
-<div class="signals">
-  <div class="card">
-    <div class="card-tag">RSI 25/75 · 高精度</div>
-    <div class="signal-box loading" id="box1">
-      <div class="signal-label" id="label1">--</div>
-      <div class="signal-sub" id="sub1">加载中...</div>
-    </div>
-    <div class="winrate">胜率 56.4% · ~40次/天</div>
+<div class="signal-box loading" id="mainBox">
+  <div class="signal-label" id="mainLabel">--</div>
+  <div class="signal-score" id="mainScore">加载中</div>
+</div>
+
+<div class="score-bar" id="scorebar"></div>
+
+<div class="indicators">
+  <div class="chip wait" id="chip-rsi">
+    <div class="chip-name">RSI (14)</div>
+    <div class="chip-val" id="chip-rsi-val">--</div>
+    <div class="chip-detail" id="chip-rsi-detail">--</div>
   </div>
-  <div class="card">
-    <div class="card-tag">RSI 30/70 · 高频率</div>
-    <div class="signal-box loading" id="box2">
-      <div class="signal-label" id="label2">--</div>
-      <div class="signal-sub" id="sub2">加载中...</div>
-    </div>
-    <div class="winrate">胜率 56.0% · ~115次/天</div>
+  <div class="chip wait" id="chip-macd">
+    <div class="chip-name">MACD</div>
+    <div class="chip-val" id="chip-macd-val">--</div>
+    <div class="chip-detail" id="chip-macd-detail">--</div>
+  </div>
+  <div class="chip wait" id="chip-ema">
+    <div class="chip-name">EMA 5 / 20</div>
+    <div class="chip-val" id="chip-ema-val">--</div>
+    <div class="chip-detail" id="chip-ema-detail">--</div>
+  </div>
+  <div class="chip wait" id="chip-bb">
+    <div class="chip-name">布林带 (20)</div>
+    <div class="chip-val" id="chip-bb-val">--</div>
+    <div class="chip-detail" id="chip-bb-detail">--</div>
   </div>
 </div>
 
@@ -88,15 +116,13 @@
 
 <div class="rsi-bar-wrap">
   <div class="rsi-labels">
-    <span style="color:#00e676">◀ &lt;25</span>
-    <span>30 ── 70</span>
-    <span style="color:#ff1744">&gt;75 ▶</span>
+    <span style="color:#00e676">◀ &lt;30</span>
+    <span>RSI</span>
+    <span style="color:#ff1744">&gt;70 ▶</span>
   </div>
   <div class="rsi-bar-bg">
     <div class="rsi-zone-lo"></div>
     <div class="rsi-zone-hi"></div>
-    <div class="rsi-line-30"></div>
-    <div class="rsi-line-70"></div>
     <div class="rsi-dot" id="dot" style="left:50%"></div>
   </div>
 </div>
@@ -110,22 +136,26 @@
 
 <script>
 const INTERVAL = 15;
-let timer = INTERVAL, last1 = null, last2 = null;
+let timer = INTERVAL, lastSig = null;
 
-function applySignal(boxId, labelId, subId, s, last, price, rsi, level) {
-  const box = document.getElementById(boxId);
-  if (last !== null && last !== s.signal && s.signal !== 'WAIT') {
-    box.classList.remove('flash');
-    void box.offsetWidth;
-    box.classList.add('flash');
-    setTimeout(() => box.classList.remove('flash'), 700);
-    fetch(`/api/notify?signal=${s.signal}&price=${price}&rsi=${rsi}&level=${encodeURIComponent(level)}`);
-  }
-  box.className = 'signal-box ' + s.signal;
-  document.getElementById(labelId).textContent = s.label;
-  document.getElementById(subId).textContent =
-    s.signal === 'UP'   ? '预测10分钟后上涨' :
-    s.signal === 'DOWN' ? '预测10分钟后下跌' : '暂无信号';
+function voteLabel(v) { return v === 1 ? '买涨 ↑' : v === -1 ? '买跌 ↓' : '观望'; }
+function voteClass(v) { return v === 1 ? 'up' : v === -1 ? 'down' : 'wait'; }
+
+function setChip(id, vote, detail) {
+  document.getElementById('chip-' + id).className = 'chip ' + voteClass(vote);
+  document.getElementById('chip-' + id + '-val').textContent = voteLabel(vote);
+  document.getElementById('chip-' + id + '-detail').textContent = detail;
+}
+
+function renderScoreBar(votes) {
+  const bar = document.getElementById('scorebar');
+  bar.innerHTML = '';
+  Object.values(votes).forEach(v => {
+    const d = document.createElement('div');
+    d.className = 'score-dot';
+    d.style.background = v === 1 ? '#00e676' : v === -1 ? '#ff1744' : '#2a2a2a';
+    bar.appendChild(d);
+  });
 }
 
 async function load() {
@@ -135,10 +165,31 @@ async function load() {
     const d = await r.json();
     if (d.error) throw new Error(d.error);
 
-    applySignal('box1', 'label1', 'sub1', d.s1, last1, d.price, d.rsi, 'RSI25/75');
-    last1 = d.s1.signal;
-    applySignal('box2', 'label2', 'sub2', d.s2, last2, d.price, d.rsi, 'RSI30/70');
-    last2 = d.s2.signal;
+    const { comp } = d;
+    const box = document.getElementById('mainBox');
+
+    if (lastSig !== null && lastSig !== comp.signal) {
+      box.classList.remove('flash');
+      void box.offsetWidth;
+      box.classList.add('flash');
+      setTimeout(() => box.classList.remove('flash'), 700);
+      fetch(`/api/notify?signal=${comp.signal}&price=${d.price}&rsi=${d.rsi}&level=${encodeURIComponent('综合')}`);
+    }
+    lastSig = comp.signal;
+
+    box.className = 'signal-box ' + comp.signal;
+    document.getElementById('mainLabel').textContent = comp.label;
+
+    const up   = Object.values(comp.votes).filter(v => v === 1).length;
+    const down = Object.values(comp.votes).filter(v => v === -1).length;
+    document.getElementById('mainScore').textContent = `↑${up}  ↓${down}  (4项指标)`;
+
+    renderScoreBar(comp.votes);
+
+    setChip('rsi',  comp.votes.rsi,  comp.details.rsi);
+    setChip('macd', comp.votes.macd, comp.details.macdHist > 0 ? `柱+${comp.details.macdHist}` : `柱${comp.details.macdHist}`);
+    setChip('ema',  comp.votes.ema,  comp.details.emaDir);
+    setChip('bb',   comp.votes.bb,   comp.details.bbPos);
 
     document.getElementById('price').textContent = '$' + d.price.toLocaleString();
     document.getElementById('rsi').textContent = d.rsi;

@@ -112,13 +112,14 @@
 const INTERVAL = 15;
 let timer = INTERVAL, last1 = null, last2 = null;
 
-function applySignal(boxId, labelId, subId, s, last) {
+function applySignal(boxId, labelId, subId, s, last, price, rsi, level) {
   const box = document.getElementById(boxId);
   if (last !== null && last !== s.signal && s.signal !== 'WAIT') {
     box.classList.remove('flash');
     void box.offsetWidth;
     box.classList.add('flash');
     setTimeout(() => box.classList.remove('flash'), 700);
+    fetch(`/api/notify?signal=${s.signal}&price=${price}&rsi=${rsi}&level=${encodeURIComponent(level)}`);
   }
   box.className = 'signal-box ' + s.signal;
   document.getElementById(labelId).textContent = s.label;
@@ -134,9 +135,9 @@ async function load() {
     const d = await r.json();
     if (d.error) throw new Error(d.error);
 
-    applySignal('box1', 'label1', 'sub1', d.s1, last1);
+    applySignal('box1', 'label1', 'sub1', d.s1, last1, d.price, d.rsi, 'RSI25/75');
     last1 = d.s1.signal;
-    applySignal('box2', 'label2', 'sub2', d.s2, last2);
+    applySignal('box2', 'label2', 'sub2', d.s2, last2, d.price, d.rsi, 'RSI30/70');
     last2 = d.s2.signal;
 
     document.getElementById('price').textContent = '$' + d.price.toLocaleString();

@@ -1,0 +1,17 @@
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  const { signal, price, rsi, level } = req.query;
+  const key = process.env.BARK_KEY;
+  if (!key) return res.status(500).json({ error: 'no bark key' });
+
+  const title = signal === 'UP' ? '📈 ETH 买涨信号' : '📉 ETH 买跌信号';
+  const body  = `RSI ${rsi} | $${price} | ${level}`;
+  const url   = `https://api.day.app/${key}/${encodeURIComponent(title)}/${encodeURIComponent(body)}?sound=minuet&level=active`;
+
+  try {
+    await fetch(url);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}

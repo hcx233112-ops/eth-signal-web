@@ -60,6 +60,8 @@
   .refresh-row { display: flex; align-items: center; gap: 8px; color: #444; font-size: 13px; }
   .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #00e676; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes flash { 0%,100%{transform:scale(1)} 20%{transform:scale(1.08)} 40%{transform:scale(1)} 60%{transform:scale(1.05)} }
+  .signal-box.flash { animation: flash 0.6s ease; }
 
   .update-time { font-size: 12px; color: #444; margin-top: 8px; }
   .error { color: #ff5555; font-size: 14px; text-align: center; }
@@ -100,7 +102,8 @@
 <div class="error" id="err"></div>
 
 <script>
-let timer = 60, iv;
+const INTERVAL = 15;
+let timer = INTERVAL, lastSignal = null;
 
 async function load() {
   try {
@@ -110,6 +113,15 @@ async function load() {
     if (d.error) throw new Error(d.error);
 
     const box = document.getElementById('box');
+    // 信号变化时闪烁
+    if (lastSignal !== null && lastSignal !== d.signal && d.signal !== 'WAIT') {
+      box.classList.remove('flash');
+      void box.offsetWidth; // reflow
+      box.classList.add('flash');
+      setTimeout(() => box.classList.remove('flash'), 700);
+    }
+    lastSignal = d.signal;
+
     box.className = 'signal-box ' + d.signal;
     document.getElementById('label').textContent = d.label;
     document.getElementById('sub').textContent =
@@ -121,7 +133,7 @@ async function load() {
     document.getElementById('uptime').textContent =
       '更新于 ' + new Date(d.time).toLocaleTimeString('zh-CN');
 
-    timer = 60;
+    timer = INTERVAL;
   } catch(e) {
     document.getElementById('err').textContent = '获取失败: ' + e.message;
   }
@@ -129,12 +141,12 @@ async function load() {
 
 function tick() {
   timer--;
-  if (timer <= 0) { load(); timer = 60; }
+  if (timer <= 0) { load(); timer = INTERVAL; }
   document.getElementById('countdown').textContent = `${timer} 秒后刷新`;
 }
 
 load();
-iv = setInterval(tick, 1000);
+setInterval(tick, 1000);
 </script>
 </body>
 </html>

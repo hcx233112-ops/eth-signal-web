@@ -27,6 +27,7 @@ function getSignal(rsi, lo, hi) {
 }
 
 async function bark(title, body) {
+  return; // 暂停通知
   const key = process.env.BARK_KEY;
   await fetch(`https://api.day.app/${key}/${encodeURIComponent(title)}/${encodeURIComponent(body)}?sound=minuet&level=active`);
 }

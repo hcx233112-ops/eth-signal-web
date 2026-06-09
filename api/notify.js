@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  return res.json({ ok: true, paused: true }); // 暂停通知
   const { signal, price, rsi, level } = req.query;
   const key = process.env.BARK_KEY;
   if (!key) return res.status(500).json({ error: 'no bark key' });
